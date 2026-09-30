@@ -148,6 +148,17 @@
           "when": "false"
         }
       ]
+    },
+    "configuration": {
+      "title": "Git Jungle",
+      "properties": {
+        "gitJungle.resetToIdleMinutes": {
+          "type": "number",
+          "default": 10,
+          "minimum": 1,
+          "description": "Show a worktree as idle when its agent has sent no status event for this many minutes (covers closed or crashed sessions). A single tool call that runs longer than this shows as idle until the next event."
+        }
+      }
     }
   },
   "license": "MIT",
