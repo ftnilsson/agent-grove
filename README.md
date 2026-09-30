@@ -1,5 +1,7 @@
 # Agent Grove 🌴
 
+[![CI](https://github.com/ftnilsson/agent-grove/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ftnilsson/agent-grove/actions/workflows/ci.yml)
+
 **See what every AI coding agent is doing across your git worktrees, from the VS Code Source Control sidebar.**
 
 Running Claude Code, Copilot CLI or Codex in several worktrees at once? Agent Grove shows which worktree has an agent working, which one is waiting on you, and tells you when one finishes.
