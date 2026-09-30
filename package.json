@@ -8,13 +8,15 @@
     "build:ext": "node scripts/build-extension.mjs",
     "package:ext": "node scripts/build-extension.mjs --minify && cd extension && vsce package --allow-missing-repository --out ../",
     "icons": "node scripts/make-icons.mjs",
-    "test": "node --test \"test/*.test.js\""
+    "test": "node --test \"test/*.test.js\"",
+    "mockups": "node scripts/make-mockups.mjs"
   },
   "engines": {
     "node": ">=20"
   },
   "license": "MIT",
   "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "@vscode/codicons": "^0.0.46-24",
     "@vscode/vsce": "^4.0.0",
     "esbuild": "^0.28.2",

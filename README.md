@@ -4,6 +4,10 @@
 
 **See what every AI coding agent is doing across your git worktrees, from the VS Code Source Control sidebar.**
 
+![Agent Grove in the VS Code Source Control sidebar, with a status bar summary and a notification](docs/images/sidebar.svg)
+
+<sub>Illustration of the dark theme; logos pulse while an agent is working. Regenerate with `npm run mockups`.</sub>
+
 Running Claude Code, Copilot CLI or Codex in several worktrees at once? Agent Grove shows which worktree has an agent working, which one is waiting on you, and tells you when one finishes.
 
 | State | What you see |
