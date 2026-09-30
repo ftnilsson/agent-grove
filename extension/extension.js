@@ -3,7 +3,6 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const IDLE_TTL_MS = 24 * 60 * 60 * 1000; // idle sessions whose SessionEnd never arrived
 const PRIORITY = { waiting: 3, running: 2, idle: 1 };
 const norm = (p) => (process.platform === 'win32' ? path.resolve(p).toLowerCase() : path.resolve(p));
 
@@ -32,18 +31,15 @@ function readAgents() {
       const s = JSON.parse(fs.readFileSync(path.join(statusDir(), f), 'utf8'));
       const age = Date.now() - s.updatedAt;
       if (!s.agent) continue; // legacy file from before the agent field; the hook can no longer update it
-      if (s.state === 'idle' && age > IDLE_TTL_MS) continue;
-      // No event for a while means the session was closed or crashed (no SessionEnd), so stop showing it as busy.
-      const decayed = s.state !== 'idle' && age > staleMs;
-      const state = decayed ? 'idle' : s.state;
+      // No event for a while: the session was closed or crashed without a SessionEnd, so show no indicator at all.
+      if (age > staleMs) continue;
       const key = norm(s.root);
       const cur = byRoot.get(key);
-      const wins = !cur || PRIORITY[state] > PRIORITY[cur.state] || (PRIORITY[state] === PRIORITY[cur.state] && s.updatedAt > cur.updatedAt);
+      const wins = !cur || PRIORITY[s.state] > PRIORITY[cur.state] || (PRIORITY[s.state] === PRIORITY[cur.state] && s.updatedAt > cur.updatedAt);
       byRoot.set(key, {
-        state: wins ? state : cur.state,
+        state: wins ? s.state : cur.state,
         agent: wins ? s.agent : cur.agent,
         updatedAt: wins ? s.updatedAt : cur.updatedAt,
-        decayed: wins ? decayed : cur.decayed,
         sessions: (cur?.sessions ?? 0) + 1,
       });
     } catch { /* half-written or corrupt file */ }
@@ -131,7 +127,7 @@ async function activate(context) {
       if (a.state === 'running') { running[kindOf(a.agent)][uri] = true; nRun++; }
       if (a.state === 'waiting') { waiting[uri] = true; nWait++; }
       const before = previous.get(key);
-      if (before && before !== a.state && !a.decayed) { // a timeout is not "finished", so no notification
+      if (before && before !== a.state) {
         const who = infoOf(a.agent).label;
         if (a.state === 'waiting') vscode.window.showInformationMessage(`${name}: ${who} needs your input`);
         else if (a.state === 'idle' && before === 'running') vscode.window.showInformationMessage(`${name}: ${who} finished`);
