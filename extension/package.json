@@ -37,18 +37,46 @@
         "icon": "$(terminal)"
       },
       {
+        "command": "gitJungle.installHooks",
+        "title": "Git Jungle: Install Claude Code Hooks"
+      },
+      {
         "command": "gitJungle.showView",
-        "title": "Agent running",
+        "title": "Git Jungle: Show Worktree Agents"
+      },
+      {
+        "command": "gitJungle.row.claude",
+        "title": "Claude is working",
+        "icon": {
+          "light": "media/claude-pulse.svg",
+          "dark": "media/claude-pulse.svg"
+        }
+      },
+      {
+        "command": "gitJungle.row.copilot",
+        "title": "Copilot is working",
+        "icon": {
+          "light": "media/copilot-pulse.svg",
+          "dark": "media/copilot-pulse.svg"
+        }
+      },
+      {
+        "command": "gitJungle.row.codex",
+        "title": "Codex is working",
+        "icon": {
+          "light": "media/codex-pulse.svg",
+          "dark": "media/codex-pulse.svg"
+        }
+      },
+      {
+        "command": "gitJungle.row.other",
+        "title": "Agent is working",
         "icon": "$(sync~spin)"
       },
       {
-        "command": "gitJungle.showViewWaiting",
-        "title": "Agent needs input",
+        "command": "gitJungle.row.waiting",
+        "title": "Agent needs your input",
         "icon": "$(bell-dot)"
-      },
-      {
-        "command": "gitJungle.installHooks",
-        "title": "Git Jungle: Install Claude Code Hooks"
       }
     ],
     "menus": {
@@ -73,14 +101,51 @@
       ],
       "scm/sourceControl": [
         {
-          "command": "gitJungle.showViewWaiting",
+          "command": "gitJungle.row.waiting",
           "group": "inline@0",
           "when": "scmProviderRootUri in gitJungle.waiting"
         },
         {
-          "command": "gitJungle.showView",
+          "command": "gitJungle.row.claude",
           "group": "inline@0",
-          "when": "scmProviderRootUri in gitJungle.running"
+          "when": "scmProviderRootUri in gitJungle.running.claude"
+        },
+        {
+          "command": "gitJungle.row.copilot",
+          "group": "inline@0",
+          "when": "scmProviderRootUri in gitJungle.running.copilot"
+        },
+        {
+          "command": "gitJungle.row.codex",
+          "group": "inline@0",
+          "when": "scmProviderRootUri in gitJungle.running.codex"
+        },
+        {
+          "command": "gitJungle.row.other",
+          "group": "inline@0",
+          "when": "scmProviderRootUri in gitJungle.running.other"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "gitJungle.row.claude",
+          "when": "false"
+        },
+        {
+          "command": "gitJungle.row.copilot",
+          "when": "false"
+        },
+        {
+          "command": "gitJungle.row.codex",
+          "when": "false"
+        },
+        {
+          "command": "gitJungle.row.other",
+          "when": "false"
+        },
+        {
+          "command": "gitJungle.row.waiting",
+          "when": "false"
         }
       ]
     }
