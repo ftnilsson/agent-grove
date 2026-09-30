@@ -6,13 +6,13 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-const hook = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'agent-status', 'hook.mjs');
+const hook = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'hooks', 'hook.mjs');
 
 function harness() {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'jungle-status-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-grove-status-'));
   const send = (payload, ...args) => spawnSync('node', [hook, ...args], {
     input: typeof payload === 'string' ? payload : JSON.stringify({ cwd: process.cwd(), ...payload }),
-    env: { ...process.env, JUNGLE_STATUS_DIR: dir },
+    env: { ...process.env, AGENT_GROVE_STATUS_DIR: dir },
   });
   const read = (name) => JSON.parse(fs.readFileSync(path.join(dir, name), 'utf8'));
   return { dir, send, read, done: () => fs.rmSync(dir, { recursive: true, force: true }) };

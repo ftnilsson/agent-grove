@@ -1,39 +1,35 @@
-# Claude Agents
+# Agent Grove: notes for contributors and coding agents
 
-This document covers using Anthropic Claude models via the Copilot CLI task tool in this repository. It explains when to prefer Claude models, example invocations, and best practices.
+Agent Grove shows per-worktree AI agent status in VS Code. See [README.md](README.md) for what it does.
 
-## Available Claude models
-- claude-haiku-4.5 — lower-latency, cost-effective; good for quick lookups and small analyses.
-- claude-sonnet-4.6 — higher-capability model for complex reasoning, long-form synthesis, and deep code analysis.
+## Layout
 
-## When to use Claude vs other models
-- Use Claude-sonnet for large, multi-step refactors, architecture summarization, or deep code reviews where higher reasoning quality helps.
-- Use Claude-haiku for fast exploratory searches, short summarization tasks, or background data extraction.
+| Path | What it is |
+|---|---|
+| `extension/` | The VS Code extension (`extension.js`, `package.json`, `media/` icons). CommonJS, bundled with esbuild into `extension/dist/`. |
+| `hooks/hook.mjs` | The hook that Claude Code, Codex CLI and Copilot CLI call. Writes `~/.agent-grove/agents/<agent>-<session>.json`. Must never throw or block. |
+| `lib/git.js` | Git helpers the extension uses: resolve a repo and list its worktrees. ESM, inlined into the bundle. |
+| `scripts/` | `build-extension.mjs` (bundle + copy hook), `make-icons.mjs` (generate `extension/media/*.svg` from the codicon font). |
+| `test/` | `node --test` suites for `lib/git.js` and the hook. |
 
-## Invocation examples (task tool)
-- Run tests with a Claude agent (task agent, sonnet model):
+## Commands
 
-  task: {
-    "description": "Run tests with full logs",
-    "agent_type": "task",
-    "model": "claude-sonnet-4.6",
-    "prompt": "Run npm test and return failing tests and stack traces."
-  }
+- `npm test` – run all tests (creates temp git repos; they disable commit signing themselves).
+- `npm run build:ext` – bundle the extension. `npm run package:ext` – produce `agent-grove.vsix`.
+- `npm run icons` – regenerate the SVG icons (needs the dev dependencies).
 
-- Explore code with a haiku agent (explore agent):
+## Design rules
 
-  task: {
-    "description": "Find worktree-related code",
-    "agent_type": "explore",
-    "model": "claude-haiku-4.5",
-    "prompt": "Search the repo for functions and files that create, move, or prune git worktrees. List file paths and short summaries."
-  }
+- **State model:** each session file holds `state` = `running | waiting | idle` plus `agent`, `root` (worktree path), `updatedAt`. The extension folds sessions per worktree with waiting > running > idle, and hides sessions with no event for `agentGrove.hideAfterMinutes`.
+- **Hooks are best effort.** `hook.mjs` swallows every error and exits 0.
+- **The extension never edits agent config files.** It copies the hook and offers a snippet; the user pastes it.
+- Claude's `Notification` with `notification_type: idle_prompt` means idle, not waiting.
+- Copilot CLI sends camelCase events with no event name in the payload, so its hooks pass `--event`.
 
-## Best practices
-- Include repository root, file paths, and precise goals in the prompt — agents are stateless.
-- Prefer sonnet for high-quality, high-effort tasks; haiku for quick/parallel scans.
-- When running potentially disruptive commands, ask for explicit confirmation in the prompt and run in `background` mode if long-running.
-- Avoid sending secrets or private keys in prompts. Treat outputs as reviewable developer artifacts.
+## Gotchas
 
-## Notes
-Tailor the model selection based on cost, latency, and task complexity. For critical safety/security reviews, pair Claude-sonnet analysis with human review.
+- **Local state lives in `~/.agent-grove/`:** `agents/` (status files), and `hook.mjs` (the copy agents call). Override the status folder with `AGENT_GROVE_STATUS_DIR` (used by the tests).
+- `extension.js` imports `../lib/git.js` with a literal path so esbuild inlines it. Do not make that path dynamic.
+- Animated SVG icons: VS Code only spins built-in codicons and only tints them with theme colours, hence the generated SVGs.
+- The global git config may sign commits with a passphrase-protected key; automated commits hang unless signing is disabled for that command.
+- Shell heredocs containing backticks or apostrophes can truncate files; prefer editing files directly.

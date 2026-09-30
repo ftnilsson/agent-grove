@@ -4,35 +4,32 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
-import * as g from '../src/git.js';
+import * as g from '../lib/git.js';
 
 const run = (cwd, ...a) => execFileSync('git', ['-C', cwd, ...a], { stdio: 'pipe' }).toString();
 
-test('worktree lifecycle', async () => {
-  const tmp = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'jungle-')));
-  const repo = path.join(tmp, 'repo');
-  await fs.mkdir(repo);
-  run(repo, 'init', '-b', 'main');
-  run(repo, '-c', 'commit.gpgsign=false', '-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '--allow-empty', '-m', 'init');
+test('lists worktrees and resolves any of them to the main repo', async () => {
+  const tmp = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'agent-grove-')));
+  try {
+    const repo = path.join(tmp, 'repo');
+    await fs.mkdir(repo);
+    run(repo, 'init', '-b', 'main');
+    run(repo, '-c', 'commit.gpgsign=false', '-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '--allow-empty', '-m', 'init');
 
-  const wt = path.join(tmp, 'repo-worktrees', 'feat');
-  await g.addWorktree(repo, { path: wt, branch: 'feat', newBranch: true, base: 'main' });
-  await fs.writeFile(path.join(wt, 'a.txt'), 'x');
+    const wt = path.join(tmp, 'repo-worktrees', 'feat');
+    run(repo, 'worktree', 'add', '-b', 'feat', wt);
+    run(repo, 'worktree', 'lock', '--reason', 'busy', wt);
 
-  const o = await g.repoOverview(repo);
-  assert.equal(o.base, 'main');
-  assert.equal(o.worktrees.length, 2);
-  const feat = o.worktrees.find((w) => w.branch === 'feat');
-  assert.equal(feat.status.untracked, 1);
-  assert.deepEqual(feat.vsBase, { ahead: 0, behind: 0 });
-  assert.equal(await g.resolveRepo(wt), await g.resolveRepo(repo));
+    const list = await g.listWorktrees(repo);
+    assert.equal(list.length, 2);
+    assert.equal(list[0].main, true);
+    assert.equal(list[0].branch, 'main');
+    const feat = list.find((w) => w.branch === 'feat');
+    assert.deepEqual([feat.locked, feat.lockReason, feat.main], [true, 'busy', false]);
 
-  await g.lockWorktree(repo, { path: wt, reason: 'busy' });
-  assert.equal((await g.listWorktrees(repo)).find((w) => w.branch === 'feat').lockReason, 'busy');
-  await g.unlockWorktree(repo, { path: wt });
-
-  await assert.rejects(g.removeWorktree(repo, { path: wt }), /untracked|modified|force/i);
-  await g.removeWorktree(repo, { path: wt, force: true, deleteBranch: true, branch: 'feat' });
-  assert.equal((await g.listWorktrees(repo)).length, 1);
-  await fs.rm(tmp, { recursive: true, force: true });
+    assert.equal(await g.resolveRepo(wt), await g.resolveRepo(repo));
+    await assert.rejects(g.resolveRepo(tmp), /not a git repository/i);
+  } finally {
+    await fs.rm(tmp, { recursive: true, force: true });
+  }
 });

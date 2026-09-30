@@ -20,7 +20,7 @@ const STATES = {
   agentstop: 'idle',
 };
 
-export const statusDir = () => process.env.JUNGLE_STATUS_DIR || path.join(os.homedir(), '.git-jungle', 'agents');
+export const statusDir = () => process.env.AGENT_GROVE_STATUS_DIR || path.join(os.homedir(), '.agent-grove', 'agents');
 
 export function apply(payload, { agent = 'claude', event, dir = statusDir() } = {}) {
   const name = String(event || payload.hook_event_name || '');

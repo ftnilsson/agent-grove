@@ -1,13 +1,21 @@
-# Git Jungle: Agent Status
+# Agent Grove: Worktree Status for AI Coding Agents
 
-See which git worktrees have a Claude Code agent running, waiting for your input, or idle, right in VS Code.
+See which git worktree has an AI coding agent (Claude Code, GitHub Copilot CLI, Codex CLI) working, waiting for you, or idle, right in the Source Control sidebar.
 
-- **Worktree Agents** view in Source Control, with a status icon per worktree
-- Status bar summary and a notification when an agent finishes or needs input
-- Experimental spinner/bell on the built-in Source Control repository rows
+- **Worktree Agents** view with a branded, pulsing logo per working agent
+- Status bar summary and a notification when an agent finishes or needs your input
+- Experimental icon on the built-in Source Control repository rows
 
 ## Setup
 
-Claude Code reports its state through hooks. Run **Git Jungle: Install Claude Code Hooks** from the Command Palette. It copies the hook script to `~/.git-jungle/hook.mjs` and puts the settings snippet on your clipboard; paste it into `~/.claude/settings.json`.
+Agents report their state through hooks. Run **Agent Grove: Install Agent Hooks** from the Command Palette, choose your agent, and paste the snippet it copies to your clipboard into that agent's config. Restart the agent session afterwards.
 
-Requires Node.js on your PATH (Claude Code hooks run `node`).
+Requires Node.js on your PATH.
+
+## Settings
+
+- `agentGrove.hideAfterMinutes` (default 10): remove a worktree's indicator when its agent has been silent this long.
+
+## Privacy
+
+Everything stays on your machine. Agents write small status files to `~/.agent-grove/agents/`; the extension reads them. No network access.

@@ -1,4 +1,4 @@
-// Bundles extension/extension.js (+ ../src/git.js) into extension/dist and ships the Claude Code hook next to it.
+// Bundles extension/extension.js (+ ../lib/git.js) into extension/dist and ships the Claude Code hook next to it.
 import { build } from 'esbuild';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -19,5 +19,5 @@ await build({
   minify: process.argv.includes('--minify'),
   sourcemap: !process.argv.includes('--minify'),
 });
-fs.copyFileSync(path.join(root, 'agent-status', 'hook.mjs'), path.join(dist, 'hook.mjs'));
+fs.copyFileSync(path.join(root, 'hooks', 'hook.mjs'), path.join(dist, 'hook.mjs'));
 console.log('built extension/dist');
