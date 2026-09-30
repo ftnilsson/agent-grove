@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "build:ext": "node scripts/build-extension.mjs",
-    "package:ext": "node scripts/build-extension.mjs --minify && cd extension && vsce package --allow-missing-repository -o ../agent-grove.vsix",
+    "package:ext": "node scripts/build-extension.mjs --minify && cd extension && vsce package --allow-missing-repository --out ../",
     "icons": "node scripts/make-icons.mjs",
     "test": "node --test \"test/*.test.js\""
   },

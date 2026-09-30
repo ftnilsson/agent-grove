@@ -45,6 +45,17 @@ npm run build:ext      # bundle into extension/dist
 
 Open the folder in VS Code and press **Ctrl+F5** to launch an Extension Development Host (F5 with the debugger sometimes fails to attach). See [AGENTS.md](AGENTS.md) for the repository layout and gotchas.
 
+## Releasing
+
+Releases are built by GitHub Actions. Merge to `main`, then push a version tag:
+
+```bash
+git tag v0.2.0
+git push origin v0.2.0
+```
+
+The workflow runs the tests, stamps `0.2.0` into the extension, builds `agent-grove-0.2.0.vsix` and publishes it as a GitHub Release with generated notes. Tags must look like `vMAJOR.MINOR.PATCH` and be on `main`. Every push and pull request also runs the tests on Linux and Windows and checks that the extension still packages.
+
 ## Troubleshooting
 
 - **No indicator for an agent:** check that a file appears in `~/.agent-grove/agents/` when the agent works. If not, the hook is not installed or the session was not restarted.
