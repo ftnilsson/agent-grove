@@ -47,14 +47,17 @@ Open the folder in VS Code and press **Ctrl+F5** to launch an Extension Developm
 
 ## Releasing
 
-Releases are built by GitHub Actions. Merge to `main`, then push a version tag:
+Releases are built by GitHub Actions and get a generated name, for example **Agent Grove 0.2.0: Creepy Badger**. Merge to `main`, then use either route:
 
-```bash
-git tag v0.2.0
-git push origin v0.2.0
-```
+- **Click a button:** Actions tab, **Release**, **Run workflow** on `main`, and pick `patch`, `minor` or `major`. It works out the next version from the latest release and creates the tag for you.
+- **Push a tag yourself:**
 
-The workflow runs the tests, stamps `0.2.0` into the extension, builds `agent-grove-0.2.0.vsix` and publishes it as a GitHub Release with generated notes. Tags must look like `vMAJOR.MINOR.PATCH` and be on `main`. Every push and pull request also runs the tests on Linux and Windows and checks that the extension still packages.
+  ```bash
+  git tag v0.2.0
+  git push origin v0.2.0
+  ```
+
+Either way the workflow runs the tests, stamps the version into the extension, builds a fresh `agent-grove-<version>.vsix` and attaches it to a new GitHub Release with generated notes. Tags must look like `vMAJOR.MINOR.PATCH` and be on `main`. Every push and pull request also runs the tests on Linux and Windows and checks that the extension still packages.
 
 ## Troubleshooting
 

@@ -1,26 +1,44 @@
 name: Release
 
-# Push a tag like v0.2.0 to build agent-grove-0.2.0.vsix and publish it as a GitHub Release.
+# Two ways to release, both build a fresh agent-grove-<version>.vsix and attach it to a GitHub Release
+# with a generated name like "Creepy Badger":
+#   1. Push a tag:   git tag v0.2.0 && git push origin v0.2.0
+#   2. Click "Run workflow" (Actions tab) on main and pick patch, minor or major; the tag is created for you.
 on:
   push:
     tags: ['v[0-9]+.[0-9]+.[0-9]+']
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Which part of the latest release version to increase
+        type: choice
+        options: [patch, minor, major]
+        default: patch
 
 permissions:
   contents: write
 
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
   release:
+    # Manual runs must start from main; tag pushes are checked against main below.
+    if: github.event_name == 'push' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Require the tag to be on main
+      - name: Require the release commit to be on main
         run: |
           git fetch origin main
           if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
-            echo "::error::Tag $GITHUB_REF_NAME is not on main. Merge first, then tag."
+            echo "::error::$GITHUB_REF_NAME is not on main. Merge first, then release."
             exit 1
           fi
 
@@ -32,21 +50,55 @@ jobs:
       - run: npm ci
       - run: npm test
 
-      - name: Stamp the tag version into the extension
+      - name: Work out the version
         id: version
+        env:
+          EVENT: ${{ github.event_name }}
+          BUMP: ${{ inputs.bump }}
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          npm --prefix extension version "$VERSION" --no-git-tag-version --allow-same-version
+          if [ "$EVENT" = "push" ]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            LATEST=$(gh release list --limit 1 --json tagName --jq '.[0].tagName // empty')
+            if [ -z "$LATEST" ]; then
+              VERSION=$(node -p "require('./extension/package.json').version")
+            else
+              IFS=. read -r MAJOR MINOR PATCH <<< "${LATEST#v}"
+              case "$BUMP" in
+                major) VERSION="$((MAJOR + 1)).0.0" ;;
+                minor) VERSION="$MAJOR.$((MINOR + 1)).0" ;;
+                *)     VERSION="$MAJOR.$MINOR.$((PATCH + 1))" ;;
+              esac
+            fi
+            if git ls-remote --exit-code --tags origin "refs/tags/v$VERSION" > /dev/null; then
+              echo "::error::Tag v$VERSION already exists."
+              exit 1
+            fi
+          fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Releasing $VERSION"
 
-      - run: npm run package:ext
+      - name: Generate a release name
+        id: relname
+        uses: ftnilsson/generate-release-name-action@v3
+        with:
+          delimiter: ' '
+          length: 2
+          capitalize: true
+
+      - name: Stamp the version into the extension
+        run: npm --prefix extension version "${{ steps.version.outputs.version }}" --no-git-tag-version --allow-same-version
+
+      - name: Build the .vsix
+        run: npm run package:ext
 
       - name: Publish GitHub Release
         env:
-          GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.version.outputs.version }}
+          RELEASE_NAME: ${{ steps.relname.outputs.release-name }}
         run: |
-          gh release create "$GITHUB_REF_NAME" "agent-grove-$VERSION.vsix" \
-            --title "Agent Grove $VERSION" \
+          gh release create "v$VERSION" "agent-grove-$VERSION.vsix" \
+            --target "$GITHUB_SHA" \
+            --title "Agent Grove $VERSION: $RELEASE_NAME" \
             --generate-notes \
             --notes "Install: \`code --install-extension agent-grove-$VERSION.vsix\`, then run **Agent Grove: Install Agent Hooks**."
