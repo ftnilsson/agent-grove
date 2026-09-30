@@ -17,7 +17,7 @@ Agent Grove shows per-worktree AI agent status in VS Code. See [README.md](READM
 - `npm test` – run all tests (creates temp git repos; they disable commit signing themselves).
 - `npm run build:ext` – bundle the extension. `npm run package:ext` – produce `agent-grove.vsix`.
 - `npm run icons` – regenerate the SVG icons (needs the dev dependencies).
-- **Releases:** `.github/workflows/release.yml` runs on a `vX.Y.Z` tag on `main`. The tag is the source of truth: the workflow writes the version into `extension/package.json` at build time, so the committed version may lag. Do not bump it by hand for a release. `ci.yml` runs tests (Linux and Windows) and a package dry run on every push and PR.
+- **Releases:** `.github/workflows/release.yml` runs on a `vX.Y.Z` tag on `main`, or manually via "Run workflow" (it bumps the latest release and creates the tag). Release names come from `ftnilsson/generate-release-name-action@v3`. The tag is the source of truth: the workflow writes the version into `extension/package.json` at build time, so the committed version may lag. Do not bump it by hand for a release. `ci.yml` runs tests (Linux and Windows) and a package dry run on every push and PR.
 
 ## Design rules
 
