@@ -2,7 +2,6 @@ const vscode = require('vscode');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { pathToFileURL } = require('node:url');
 
 const STALE_MS = 30 * 60 * 1000; // a "running" file this old is a crashed session, not a busy agent
 const PRIORITY = { waiting: 3, running: 2, idle: 1 };
@@ -60,7 +59,8 @@ const ICONS = {
 const LABEL = { running: 'agent running', waiting: 'needs your input', idle: 'idle' };
 
 async function activate(context) {
-  const gitApi = await import(pathToFileURL(path.join(context.extensionPath, '..', 'src', 'git.js')).href);
+  // A literal specifier lets esbuild inline src/git.js into dist/extension.js.
+  const gitApi = await import('../src/git.js');
 
   let worktrees = [];
   let agents = new Map();
@@ -138,6 +138,7 @@ async function activate(context) {
     tree, bar, changed,
     { dispose: () => { watcher?.close(); clearInterval(poll); clearInterval(slow); } },
     vscode.commands.registerCommand('gitJungle.refresh', refreshAll),
+    vscode.commands.registerCommand('gitJungle.installHooks', () => installHooks(context)),
     vscode.commands.registerCommand('gitJungle.showView', focusView),
     vscode.commands.registerCommand('gitJungle.showViewWaiting', focusView),
     vscode.commands.registerCommand('gitJungle.openInNewWindow', (w) =>
@@ -149,4 +150,25 @@ async function activate(context) {
   await refreshAll();
 }
 
-module.exports = { activate, deactivate() {} };
+/** Copies the bundled hook to a stable path and hands the user the settings.json snippet (never edits settings itself). */
+async function installHooks(context) {
+  const target = path.join(os.homedir(), '.git-jungle', 'hook.mjs');
+  fs.mkdirSync(path.dirname(target), { recursive: true });
+  fs.copyFileSync(path.join(context.extensionPath, 'dist', 'hook.mjs'), target);
+
+  const entry = [{ hooks: [{ type: 'command', command: `node "${target.replace(/\\/g, '/')}"` }] }];
+  const events = ['SessionStart', 'UserPromptSubmit', 'PostToolUse', 'Notification', 'Stop', 'SessionEnd'];
+  const snippet = JSON.stringify({ hooks: Object.fromEntries(events.map((e) => [e, entry])) }, null, 2);
+  await vscode.env.clipboard.writeText(snippet);
+
+  const pick = await vscode.window.showInformationMessage(
+    'Hook installed and the settings snippet is on your clipboard. Merge its "hooks" block into ~/.claude/settings.json.',
+    'Open settings.json',
+  );
+  if (pick) {
+    const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(path.join(os.homedir(), '.claude', 'settings.json')));
+    await vscode.window.showTextDocument(doc);
+  }
+}
+
+module.exports = { activate, deactivate() {}, installHooks };

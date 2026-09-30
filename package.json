@@ -3,11 +3,21 @@
   "version": "0.1.0",
   "description": "Lightweight cross-platform UI to manage and visualize git worktrees",
   "type": "module",
-  "bin": { "git-jungle": "bin/git-jungle.js" },
+  "bin": {
+    "git-jungle": "bin/git-jungle.js"
+  },
   "scripts": {
     "start": "node bin/git-jungle.js",
-    "test": "node --test \"test/*.test.js\""
+    "test": "node --test \"test/*.test.js\"",
+    "build:ext": "node scripts/build-extension.mjs",
+    "package:ext": "node scripts/build-extension.mjs --minify && cd extension && vsce package --allow-missing-repository --skip-license -o ../git-jungle-agents.vsix"
   },
-  "engines": { "node": ">=20" },
-  "license": "MIT"
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@vscode/vsce": "^4.0.0",
+    "esbuild": "^0.28.2"
+  }
 }
