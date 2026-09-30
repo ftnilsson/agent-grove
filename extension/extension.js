@@ -35,9 +35,17 @@ function readAgents() {
 
 async function loadWorktrees(gitApi) {
   const seen = new Map();
-  for (const folder of vscode.workspace.workspaceFolders ?? []) {
+  // Workspace folders plus every repository the built-in Git extension found (it scans sub-folders,
+  // so opening a parent folder of several worktrees still works).
+  const dirs = (vscode.workspace.workspaceFolders ?? []).map((f) => f.uri.fsPath);
+  try {
+    const gitExt = vscode.extensions.getExtension('vscode.git');
+    const git = (gitExt?.isActive ? gitExt.exports : await gitExt?.activate())?.getAPI(1);
+    for (const r of git?.repositories ?? []) dirs.push(r.rootUri.fsPath);
+  } catch { /* git extension unavailable */ }
+  for (const dir of dirs) {
     try {
-      const repo = await gitApi.resolveRepo(folder.uri.fsPath);
+      const repo = await gitApi.resolveRepo(dir);
       for (const w of await gitApi.listWorktrees(repo)) seen.set(norm(w.path), w);
     } catch { /* not a repo */ }
   }
