@@ -1,0 +1,33 @@
+{
+  "name": "git-jungle-agents",
+  "displayName": "Git Jungle: Agent Status",
+  "description": "Shows which git worktrees have a Claude Code agent running or waiting for input",
+  "version": "0.0.1",
+  "publisher": "local",
+  "engines": { "vscode": "^1.90.0" },
+  "main": "./extension.js",
+  "activationEvents": ["onStartupFinished"],
+  "contributes": {
+    "views": {
+      "scm": [{ "id": "gitJungle.worktrees", "name": "Worktree Agents" }]
+    },
+    "commands": [
+      { "command": "gitJungle.refresh", "title": "Git Jungle: Refresh", "icon": "$(refresh)" },
+      { "command": "gitJungle.openInNewWindow", "title": "Open Worktree in New Window", "icon": "$(multiple-windows)" },
+      { "command": "gitJungle.openTerminal", "title": "Open Terminal in Worktree", "icon": "$(terminal)" },
+      { "command": "gitJungle.showView", "title": "Agent running", "icon": "$(sync~spin)" },
+      { "command": "gitJungle.showViewWaiting", "title": "Agent needs input", "icon": "$(bell-dot)" }
+    ],
+    "menus": {
+      "view/title": [{ "command": "gitJungle.refresh", "when": "view == gitJungle.worktrees", "group": "navigation" }],
+      "view/item/context": [
+        { "command": "gitJungle.openInNewWindow", "when": "view == gitJungle.worktrees", "group": "inline@1" },
+        { "command": "gitJungle.openTerminal", "when": "view == gitJungle.worktrees", "group": "inline@2" }
+      ],
+      "scm/sourceControl": [
+        { "command": "gitJungle.showViewWaiting", "group": "inline@0", "when": "scmProviderRootUri in gitJungle.waiting" },
+        { "command": "gitJungle.showView", "group": "inline@0", "when": "scmProviderRootUri in gitJungle.running" }
+      ]
+    }
+  }
+}
