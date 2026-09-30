@@ -1,0 +1,13 @@
+{
+  "name": "git-jungle",
+  "version": "0.1.0",
+  "description": "Lightweight cross-platform UI to manage and visualize git worktrees",
+  "type": "module",
+  "bin": { "git-jungle": "bin/git-jungle.js" },
+  "scripts": {
+    "start": "node bin/git-jungle.js",
+    "test": "node --test \"test/*.test.js\""
+  },
+  "engines": { "node": ">=20" },
+  "license": "MIT"
+}
