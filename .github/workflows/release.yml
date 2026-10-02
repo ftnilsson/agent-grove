@@ -82,9 +82,9 @@ jobs:
         id: relname
         uses: ftnilsson/generate-release-name-action@v3
         with:
-          delimiter: ' '
+          delimiter: '-'
           length: 2
-          capitalize: true
+          capitalize: false
 
       - name: Stamp the version into the extension
         run: npm --prefix extension version "${{ steps.version.outputs.version }}" --no-git-tag-version --allow-same-version
